@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MEKO FOCUS</string>
+    <string name="start_focus">开始专注</string>
+    <string name="pause">暂停</string>
+    <string name="resume">继续</string>
+    <string name="reset">重置</string>
+    <string name="focus">专注</string>
+    <string name="break_time">休息</string>
+    <string name="short_break">短休</string>
+    <string name="long_break">长休</string>
+    <string name="settings">设置</string>
+    <string name="theme_switch">切换主题</string>
+    <string name="notification_channel_name">番茄钟计时器</string>
+    <string name="notification_channel_description">显示番茄钟倒计时进度</string>
+    <string name="notification_title">MEKO FOCUS</string>
+    <string name="notification_content">%1$s 剩余时间: %2$s</string>
+    <string name="notification_action_pause">暂停</string>
+    <string name="notification_action_resume">继续</string>
+    <string name="notification_action_skip">跳过</string>
+    <string name="quote_gaudium">Gaudium Perenne, Intentio Constans</string>
+    <string name="quote_focus">专注当下，恒久喜悦</string>
+    <string name="quote_persist">持之以恒，志向恒定</string>
+    <string name="quote_deep">深度专注，心流体验</string>
+</resources>

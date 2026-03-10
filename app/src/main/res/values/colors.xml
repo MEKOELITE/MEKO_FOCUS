@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 极简主义配色方案 -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="gray">#FF808080</color>
+    <color name="light_gray">#FFCCCCCC</color>
+    <color name="dark_gray">#FF333333</color>
+
+    <!-- 番茄钟状态颜色 -->
+    <color name="focus_color">#FF000000</color> <!-- 黑色 -->
+    <color name="short_break_color">#FF4CAF50</color> <!-- 绿色 -->
+    <color name="long_break_color">#FF2196F3</color> <!-- 蓝色 -->
+
+    <!-- 主题颜色 -->
+    <color name="primary_color">#FF000000</color>
+    <color name="surface_color">#FFFFFFFF</color>
+    <color name="on_surface_color">#FF000000</color>
+</resources>
