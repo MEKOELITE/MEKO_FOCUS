@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.meko.focus.presentation.component.FocusChart
+import com.meko.focus.presentation.component.HeatmapChart
 import com.meko.focus.presentation.theme.usePomodoroTheme
 import com.meko.focus.presentation.viewmodel.ChartViewModel
 
@@ -106,7 +107,7 @@ fun ChartScreen(
                 SegmentedButton(
                     selected = uiState.chartType is ChartViewModel.ChartType.Weekly,
                     onClick = { viewModel.switchChartType(ChartViewModel.ChartType.Weekly) },
-                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3),
                     colors = SegmentedButtonDefaults.colors(
                         activeContainerColor = if (isDarkTheme) Color.White else Color.Black,
                         activeContentColor = if (isDarkTheme) Color.Black else Color.White,
@@ -119,7 +120,7 @@ fun ChartScreen(
                 SegmentedButton(
                     selected = uiState.chartType is ChartViewModel.ChartType.Monthly,
                     onClick = { viewModel.switchChartType(ChartViewModel.ChartType.Monthly) },
-                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3),
                     colors = SegmentedButtonDefaults.colors(
                         activeContainerColor = if (isDarkTheme) Color.White else Color.Black,
                         activeContentColor = if (isDarkTheme) Color.Black else Color.White,
@@ -128,6 +129,19 @@ fun ChartScreen(
                     )
                 ) {
                     Text("本月")
+                }
+                SegmentedButton(
+                    selected = uiState.chartType is ChartViewModel.ChartType.Heatmap,
+                    onClick = { viewModel.switchChartType(ChartViewModel.ChartType.Heatmap) },
+                    shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3),
+                    colors = SegmentedButtonDefaults.colors(
+                        activeContainerColor = if (isDarkTheme) Color.White else Color.Black,
+                        activeContentColor = if (isDarkTheme) Color.Black else Color.White,
+                        inactiveContainerColor = if (isDarkTheme) Color.DarkGray else Color.LightGray,
+                        inactiveContentColor = if (isDarkTheme) Color.White else Color.Black
+                    )
+                ) {
+                    Text("热力图")
                 }
             }
 
@@ -190,15 +204,28 @@ fun ChartScreen(
                     }
                 }
             } else {
-                FocusChart(
-                    dailyData = uiState.dailyData,
-                    weeklyData = uiState.weeklyData,
-                    chartType = uiState.chartType,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(300.dp),
-                    isDarkTheme = isDarkTheme
-                )
+                when (uiState.chartType) {
+                    is ChartViewModel.ChartType.Weekly, is ChartViewModel.ChartType.Monthly -> {
+                        FocusChart(
+                            dailyData = uiState.dailyData,
+                            weeklyData = uiState.weeklyData,
+                            chartType = uiState.chartType,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(300.dp),
+                            isDarkTheme = isDarkTheme
+                        )
+                    }
+                    is ChartViewModel.ChartType.Heatmap -> {
+                        HeatmapChart(
+                            weeklyData = uiState.heatmapData,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(350.dp),
+                            isDarkTheme = isDarkTheme
+                        )
+                    }
+                }
             }
 
             // 图表说明
@@ -207,6 +234,7 @@ fun ChartScreen(
                 text = when (uiState.chartType) {
                     is ChartViewModel.ChartType.Weekly -> "显示最近7天的专注时长"
                     is ChartViewModel.ChartType.Monthly -> "显示最近4周的专注时长"
+                    is ChartViewModel.ChartType.Heatmap -> "显示过去52周的专注热力图"
                 },
                 fontSize = 12.sp,
                 color = if (isDarkTheme) Color.LightGray else Color.Gray,

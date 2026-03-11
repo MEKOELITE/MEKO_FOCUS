@@ -6,11 +6,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.meko.focus.presentation.screen.ChartScreen
+import com.meko.focus.presentation.screen.SettingsScreen
 import com.meko.focus.presentation.screen.TimerScreen
 
 sealed class Screen(val route: String) {
     object Timer : Screen("timer")
     object Chart : Screen("chart")
+    object Settings : Screen("settings")
 }
 
 @Composable
@@ -26,12 +28,23 @@ fun FocusNavHost(
             TimerScreen(
                 onNavigateToChart = {
                     navController.navigate(Screen.Chart.route)
+                },
+                onNavigateToSettings = {
+                    navController.navigate(Screen.Settings.route)
                 }
             )
         }
 
         composable(Screen.Chart.route) {
             ChartScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Screen.Settings.route) {
+            SettingsScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }

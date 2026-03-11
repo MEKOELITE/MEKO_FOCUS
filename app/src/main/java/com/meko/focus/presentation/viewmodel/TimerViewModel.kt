@@ -5,8 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.meko.focus.domain.model.FocusSession
 import com.meko.focus.domain.model.SessionType
+import com.meko.focus.domain.model.TimerSettings
 import com.meko.focus.domain.model.TimerState
 import com.meko.focus.domain.repository.FocusSessionRepository
+import com.meko.focus.domain.repository.SettingsRepository
 import com.meko.focus.presentation.component.PomodoroSegment
 import com.meko.focus.util.VibrationHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,6 +18,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
@@ -23,11 +27,27 @@ import javax.inject.Inject
 @HiltViewModel
 class TimerViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val focusSessionRepository: FocusSessionRepository
+    private val focusSessionRepository: FocusSessionRepository,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TimerUiState())
     val uiState: StateFlow<TimerUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            settingsRepository.getSettings().distinctUntilChanged().collectLatest { settings ->
+                _uiState.value = _uiState.value.copy(settings = settings)
+                // 如果计时器未运行且剩余时间是默认值，更新剩余时间
+                if (_uiState.value.timerState == TimerState.STOPPED &&
+                    _uiState.value.remainingTimeMs == 25L * 60 * 1000) {
+                    _uiState.value = _uiState.value.copy(
+                        remainingTimeMs = getDefaultTimeForSegment(_uiState.value.selectedSegment)
+                    )
+                }
+            }
+        }
+    }
 
     // 计时器作业
     private var timerJob: Job? = null
@@ -105,44 +125,64 @@ class TimerViewModel @Inject constructor(
 
     private fun onTimerFinished() {
         val currentState = _uiState.value
+        val settings = currentState.settings
 
-        when (currentState.selectedSegment) {
-            PomodoroSegment.FOCUS -> {
-                // 完成一个专注会话
-                val newCompletedSessions = currentState.completedFocusSessions + 1
-                val isLongBreak = newCompletedSessions % 4 == 0
+        // 触发振动提醒（如果启用）
+        if (settings.vibrationEnabled) {
+            VibrationHelper.vibrateTimerComplete(context)
+        }
 
-                // 保存专注会话到数据库
-                saveFocusSession(currentState)
+        // TODO: 触发声音提醒（如果启用）
+        // TODO: 显示励志语录
 
-                _uiState.value = currentState.copy(
-                    selectedSegment = PomodoroSegment.BREAK,
-                    completedFocusSessions = newCompletedSessions,
-                    remainingTimeMs = if (isLongBreak) {
-                        getLongBreakDuration()
-                    } else {
-                        getShortBreakDuration()
-                    },
-                    timerState = TimerState.STOPPED,
-                    sessionStartTime = null
-                )
+        if (settings.autoSwitch) {
+            when (currentState.selectedSegment) {
+                PomodoroSegment.FOCUS -> {
+                    // 完成一个专注会话
+                    val newCompletedSessions = currentState.completedFocusSessions + 1
+                    val isLongBreak = newCompletedSessions % 4 == 0
+
+                    // 保存专注会话到数据库
+                    saveFocusSession(currentState)
+
+                    _uiState.value = currentState.copy(
+                        selectedSegment = PomodoroSegment.BREAK,
+                        completedFocusSessions = newCompletedSessions,
+                        remainingTimeMs = if (isLongBreak) {
+                            getLongBreakDuration()
+                        } else {
+                            getShortBreakDuration()
+                        },
+                        timerState = TimerState.STOPPED,
+                        sessionStartTime = null
+                    )
+                }
+                PomodoroSegment.BREAK -> {
+                    // 休息结束，开始下一个专注
+                    _uiState.value = currentState.copy(
+                        selectedSegment = PomodoroSegment.FOCUS,
+                        remainingTimeMs = getFocusDuration(),
+                        timerState = TimerState.STOPPED,
+                        sessionStartTime = null
+                    )
+                }
             }
-            PomodoroSegment.BREAK -> {
-                // 休息结束，开始下一个专注
-                _uiState.value = currentState.copy(
-                    selectedSegment = PomodoroSegment.FOCUS,
-                    remainingTimeMs = getFocusDuration(),
-                    timerState = TimerState.STOPPED,
-                    sessionStartTime = null
+        } else {
+            // 自动切换关闭，只是停止计时器
+            _uiState.value = currentState.copy(
+                timerState = TimerState.STOPPED,
+                sessionStartTime = null
+            )
+
+            // 如果是专注会话完成，仍然保存记录
+            if (currentState.selectedSegment == PomodoroSegment.FOCUS) {
+                saveFocusSession(currentState)
+                val newCompletedSessions = currentState.completedFocusSessions + 1
+                _uiState.value = _uiState.value.copy(
+                    completedFocusSessions = newCompletedSessions
                 )
             }
         }
-
-        // 触发振动提醒
-        VibrationHelper.vibrateTimerComplete(context)
-
-        // TODO: 触发声音提醒
-        // TODO: 显示励志语录
     }
 
     private fun saveFocusSession(state: TimerUiState) {
@@ -173,9 +213,9 @@ class TimerViewModel @Inject constructor(
         }
     }
 
-    private fun getFocusDuration(): Long = 25L * 60 * 1000 // 25分钟
-    private fun getShortBreakDuration(): Long = 5L * 60 * 1000 // 5分钟
-    private fun getLongBreakDuration(): Long = 15L * 60 * 1000 // 15分钟
+    private fun getFocusDuration(): Long = _uiState.value.settings.focusDurationMinutes * 60 * 1000L
+    private fun getShortBreakDuration(): Long = _uiState.value.settings.shortBreakDurationMinutes * 60 * 1000L
+    private fun getLongBreakDuration(): Long = _uiState.value.settings.longBreakDurationMinutes * 60 * 1000L
 
     override fun onCleared() {
         super.onCleared()
@@ -184,9 +224,10 @@ class TimerViewModel @Inject constructor(
 }
 
 data class TimerUiState(
+    val settings: TimerSettings = TimerSettings(),
     val selectedSegment: PomodoroSegment = PomodoroSegment.FOCUS,
     val timerState: TimerState = TimerState.STOPPED,
-    val remainingTimeMs: Long = 25L * 60 * 1000, // 默认25分钟
+    val remainingTimeMs: Long = 25L * 60 * 1000, // 默认25分钟，基于settings更新
     val completedFocusSessions: Int = 0,
     val sessionStartTime: Date? = null
 ) {

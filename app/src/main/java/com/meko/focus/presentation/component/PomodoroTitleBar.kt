@@ -8,6 +8,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.PictureInPicture
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -24,6 +26,8 @@ import com.meko.focus.presentation.theme.usePomodoroTheme
 @Composable
 fun PomodoroTitleBar(
     onChartClick: () -> Unit = {},
+    onSettingsClick: () -> Unit = {},
+    onPictureInPictureClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val themeState = usePomodoroTheme()
@@ -50,6 +54,28 @@ fun PomodoroTitleBar(
                 Icon(
                     imageVector = Icons.Default.BarChart,
                     contentDescription = "专注统计",
+                    tint = if (themeState.isDarkTheme) androidx.compose.ui.graphics.Color.White else androidx.compose.ui.graphics.Color.Black
+                )
+            }
+
+            // 设置按钮
+            IconButton(
+                onClick = onSettingsClick
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "设置",
+                    tint = if (themeState.isDarkTheme) androidx.compose.ui.graphics.Color.White else androidx.compose.ui.graphics.Color.Black
+                )
+            }
+
+            // 画中画按钮
+            IconButton(
+                onClick = onPictureInPictureClick
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PictureInPicture,
+                    contentDescription = "画中画模式",
                     tint = if (themeState.isDarkTheme) androidx.compose.ui.graphics.Color.White else androidx.compose.ui.graphics.Color.Black
                 )
             }

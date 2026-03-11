@@ -128,4 +128,75 @@ object ChartDataAggregator {
 
         return last4Weeks
     }
+
+    data class WeeklyHeatmapData(
+        val date: Date, // 周一开始的日期
+        val totalMinutes: Int,
+        val sessionCount: Int
+    )
+
+    fun getLast52WeeksData(sessions: List<FocusSession>): List<WeeklyHeatmapData> {
+        val aggregated = aggregateByWeek(sessions)
+        val calendar = Calendar.getInstance()
+        calendar.firstDayOfWeek = Calendar.MONDAY
+
+        // 获取最近52周的数据
+        val last52Weeks = mutableListOf<WeeklyHeatmapData>()
+
+        for (i in 51 downTo 0) {
+            calendar.time = Date()
+            calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+            calendar.add(Calendar.WEEK_OF_YEAR, -i)
+            calendar.set(Calendar.HOUR_OF_DAY, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+
+            val targetWeek = calendar.time
+            val dataForWeek = aggregated.find {
+                it.weekStart.time == targetWeek.time
+            } ?: WeeklyData(targetWeek, 0, 0)
+
+            last52Weeks.add(
+                WeeklyHeatmapData(
+                    date = targetWeek,
+                    totalMinutes = dataForWeek.totalMinutes,
+                    sessionCount = dataForWeek.sessionCount
+                )
+            )
+        }
+
+        return last52Weeks
+    }
+
+    fun getYearlyData(sessions: List<FocusSession>): Map<Int, Int> {
+        val result = mutableMapOf<Int, Int>()
+        val calendar = Calendar.getInstance()
+
+        for (session in sessions) {
+            calendar.time = session.startTime
+            val year = calendar.get(Calendar.YEAR)
+            val current = result[year] ?: 0
+            result[year] = current + session.durationMinutes
+        }
+
+        return result
+    }
+
+    fun getMonthlyData(sessions: List<FocusSession>, year: Int): Map<Int, Int> {
+        val result = mutableMapOf<Int, Int>()
+        val calendar = Calendar.getInstance()
+
+        for (session in sessions) {
+            calendar.time = session.startTime
+            val sessionYear = calendar.get(Calendar.YEAR)
+            if (sessionYear == year) {
+                val month = calendar.get(Calendar.MONTH) // 0-11
+                val current = result[month] ?: 0
+                result[month] = current + session.durationMinutes
+            }
+        }
+
+        return result
+    }
 }

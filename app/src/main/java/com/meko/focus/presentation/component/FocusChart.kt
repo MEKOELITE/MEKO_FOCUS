@@ -26,7 +26,7 @@ import com.meko.focus.presentation.viewmodel.ChartViewModel
 fun FocusChart(
     dailyData: List<DailyData>,
     weeklyData: List<WeeklyData>,
-    chartType: ChartViewModel.ChartType,
+    chartType: ChartViewModel.ChartType, // 假设这是一个 Sealed Class
     modifier: Modifier = Modifier,
     isDarkTheme: Boolean = false
 ) {
@@ -38,12 +38,19 @@ fun FocusChart(
         },
         modifier = modifier,
         update = { chart ->
+            // 这里是修复的核心
             when (chartType) {
                 is ChartViewModel.ChartType.Weekly -> {
                     setupWeeklyChart(chart, dailyData, isDarkTheme)
                 }
                 is ChartViewModel.ChartType.Monthly -> {
                     setupMonthlyChart(chart, weeklyData, isDarkTheme)
+                }
+                // 必须处理所有可能的分支，或者加一个 else
+                else -> {
+                    // 如果是 Heatmap 或其他类型，暂时清空图表或保持原样
+                    chart.data = null
+                    chart.invalidate()
                 }
             }
         }

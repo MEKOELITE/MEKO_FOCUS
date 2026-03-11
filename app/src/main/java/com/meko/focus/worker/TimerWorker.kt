@@ -9,6 +9,7 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.meko.focus.R
+import com.meko.focus.util.NotificationHelper
 import kotlinx.coroutines.delay
 
 class TimerWorker(
@@ -54,19 +55,12 @@ class TimerWorker(
         sessionType: String,
         remainingTimeMs: Long
     ): ForegroundInfo {
-        val notification = NotificationCompat.Builder(applicationContext, TIMER_CHANNEL_ID)
-            .setContentTitle(applicationContext.getString(R.string.notification_title))
-            .setContentText(
-                applicationContext.getString(
-                    R.string.notification_content,
-                    sessionType,
-                    formatTime(remainingTimeMs)
-                )
-            )
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setOngoing(true)
-            .build()
+        val notification = NotificationHelper.createTimerNotificationWithActions(
+            applicationContext,
+            sessionType,
+            remainingTimeMs,
+            isTimerRunning = true
+        ).build()
 
         return ForegroundInfo(notificationId, notification)
     }
@@ -76,8 +70,15 @@ class TimerWorker(
         sessionType: String,
         remainingTimeMs: Long
     ) {
-        // 在实际应用中，这里会更新通知
-        // 为简化，我们仅在此处占位
+        val notification = NotificationHelper.createTimerNotificationWithActions(
+            applicationContext,
+            sessionType,
+            remainingTimeMs,
+            isTimerRunning = true
+        ).build()
+
+        val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+        notificationManager.notify(notificationId, notification)
     }
 
     private fun sendCompletionNotification(sessionType: String) {

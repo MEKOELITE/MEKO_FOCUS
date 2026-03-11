@@ -7,6 +7,7 @@ import com.meko.focus.domain.repository.FocusSessionRepository
 import com.meko.focus.util.ChartDataAggregator
 import com.meko.focus.util.ChartDataAggregator.DailyData
 import com.meko.focus.util.ChartDataAggregator.WeeklyData
+import com.meko.focus.util.ChartDataAggregator.WeeklyHeatmapData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +26,7 @@ class ChartViewModel @Inject constructor(
     sealed class ChartType {
         object Weekly : ChartType()
         object Monthly : ChartType()
+        object Heatmap : ChartType()
     }
 
     data class ChartUiState(
@@ -32,6 +34,7 @@ class ChartViewModel @Inject constructor(
         val chartType: ChartType = ChartType.Weekly,
         val dailyData: List<DailyData> = emptyList(),
         val weeklyData: List<WeeklyData> = emptyList(),
+        val heatmapData: List<WeeklyHeatmapData> = emptyList(),
         val totalSessions: Int = 0,
         val totalMinutes: Int = 0,
         val error: String? = null
@@ -59,12 +62,14 @@ class ChartViewModel @Inject constructor(
                 // 获取图表数据
                 val dailyData = ChartDataAggregator.getLast7DaysData(sessions)
                 val weeklyData = ChartDataAggregator.getLast4WeeksData(sessions)
+                val heatmapData = ChartDataAggregator.getLast52WeeksData(sessions)
 
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         dailyData = dailyData,
                         weeklyData = weeklyData,
+                        heatmapData = heatmapData,
                         totalSessions = totalSessions,
                         totalMinutes = totalMinutes
                     )

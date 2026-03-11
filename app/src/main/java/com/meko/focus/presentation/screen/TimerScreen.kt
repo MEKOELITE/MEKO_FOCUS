@@ -12,8 +12,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.meko.focus.MainActivity
 import com.meko.focus.presentation.component.PomodoroFullWidthButton
 import com.meko.focus.presentation.component.PomodoroLargeTimer
 import com.meko.focus.presentation.component.PomodoroSegmentPicker
@@ -23,8 +25,15 @@ import com.meko.focus.presentation.viewmodel.TimerViewModel
 @Composable
 fun TimerScreen(
     viewModel: TimerViewModel = hiltViewModel(),
-    onNavigateToChart: () -> Unit = {}
+    onNavigateToChart: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val onPictureInPictureClick = {
+        if (context is MainActivity) {
+            context.enterPictureInPictureMode()
+        }
+    }
     val uiState by viewModel.uiState.collectAsState()
 
     Column(
@@ -37,6 +46,8 @@ fun TimerScreen(
         // 顶部标题栏
         PomodoroTitleBar(
             onChartClick = onNavigateToChart,
+            onSettingsClick = onNavigateToSettings,
+            onPictureInPictureClick = onPictureInPictureClick,
             modifier = Modifier.fillMaxWidth()
         )
 
