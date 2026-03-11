@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme  // 必须导入这个，才能使用 MaterialTheme.colorScheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.meko.focus.presentation.screen.TimerScreen
+import com.meko.focus.presentation.navigation.FocusNavHost
 import com.meko.focus.presentation.theme.PomodoroTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -23,8 +23,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    // 这里放置你的主屏幕组件
-                    TimerScreen()
+                    // 使用导航组件
+                    FocusNavHost()
                 }
             }
         }

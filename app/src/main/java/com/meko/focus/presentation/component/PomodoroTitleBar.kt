@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material3.Icon
@@ -22,6 +23,7 @@ import com.meko.focus.presentation.theme.usePomodoroTheme
 
 @Composable
 fun PomodoroTitleBar(
+    onChartClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val themeState = usePomodoroTheme()
@@ -40,14 +42,28 @@ fun PomodoroTitleBar(
             color = if (themeState.isDarkTheme) androidx.compose.ui.graphics.Color.White else androidx.compose.ui.graphics.Color.Black
         )
 
-        IconButton(
-            onClick = { themeState.toggleTheme() }
-        ) {
-            Icon(
-                imageVector = if (themeState.isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
-                contentDescription = stringResource(R.string.theme_switch),
-                tint = if (themeState.isDarkTheme) androidx.compose.ui.graphics.Color.White else androidx.compose.ui.graphics.Color.Black
-            )
+        Row {
+            // 图表按钮
+            IconButton(
+                onClick = onChartClick
+            ) {
+                Icon(
+                    imageVector = Icons.Default.BarChart,
+                    contentDescription = "专注统计",
+                    tint = if (themeState.isDarkTheme) androidx.compose.ui.graphics.Color.White else androidx.compose.ui.graphics.Color.Black
+                )
+            }
+
+            // 主题切换按钮
+            IconButton(
+                onClick = { themeState.toggleTheme() }
+            ) {
+                Icon(
+                    imageVector = if (themeState.isDarkTheme) Icons.Default.LightMode else Icons.Default.DarkMode,
+                    contentDescription = stringResource(R.string.theme_switch),
+                    tint = if (themeState.isDarkTheme) androidx.compose.ui.graphics.Color.White else androidx.compose.ui.graphics.Color.Black
+                )
+            }
         }
     }
 }

@@ -22,7 +22,8 @@ import com.meko.focus.presentation.viewmodel.TimerViewModel
 
 @Composable
 fun TimerScreen(
-    viewModel: TimerViewModel = hiltViewModel()
+    viewModel: TimerViewModel = hiltViewModel(),
+    onNavigateToChart: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -34,7 +35,10 @@ fun TimerScreen(
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         // 顶部标题栏
-        PomodoroTitleBar(modifier = Modifier.fillMaxWidth())
+        PomodoroTitleBar(
+            onChartClick = onNavigateToChart,
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Spacer(modifier = Modifier.height(32.dp))
 
