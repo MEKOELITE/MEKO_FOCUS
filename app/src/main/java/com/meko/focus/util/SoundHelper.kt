@@ -1,40 +1,26 @@
 package com.meko.focus.util
 
 import android.content.Context
-import android.media.AudioAttributes
-import android.media.SoundPool
+import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 
 object SoundHelper {
-    private var soundPool: SoundPool? = null
-    private var tickSoundId = 0
-    private var completeSoundId = 0
-    private var isInitialized = false
+    private var ringtone: android.media.Ringtone? = null
     private var isEnabled = true
 
     fun initialize(context: Context) {
-        if (isInitialized) return
+        if (ringtone != null) return
 
-        val audioAttributes = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_MEDIA)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-            .build()
-
-        soundPool = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            SoundPool.Builder()
-                .setMaxStreams(2)
-                .setAudioAttributes(audioAttributes)
-                .build()
-        } else {
-            @Suppress("DEPRECATION")
-            SoundPool(2, android.media.AudioManager.STREAM_MUSIC, 0)
+        try {
+            val notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            ringtone = RingtoneManager.getRingtone(context, notification)
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-
-        // 加载声音资源（需要添加声音文件到res/raw）
-        // tickSoundId = soundPool?.load(context, R.raw.tick_sound, 1) ?: 0
-        // completeSoundId = soundPool?.load(context, R.raw.complete_sound, 1) ?: 0
-
-        isInitialized = true
     }
 
     fun setEnabled(enabled: Boolean) {
@@ -42,18 +28,20 @@ object SoundHelper {
     }
 
     fun playTick() {
-        if (!isEnabled || !isInitialized) return
-        soundPool?.play(tickSoundId, 0.1f, 0.1f, 1, 0, 1.0f)
+        // Not implemented - tick sound not needed
     }
 
     fun playComplete() {
-        if (!isEnabled || !isInitialized) return
-        soundPool?.play(completeSoundId, 0.5f, 0.5f, 1, 0, 1.0f)
+        if (!isEnabled || ringtone == null) return
+        try {
+            ringtone?.play()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     fun release() {
-        soundPool?.release()
-        soundPool = null
-        isInitialized = false
+        ringtone?.stop()
+        ringtone = null
     }
 }
