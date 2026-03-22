@@ -2,6 +2,10 @@
 <resources>
     <string name="app_name">MEKO FOCUS</string>
     <string name="start_focus">开始专注</string>
+    <string name="start_break">开始休息</string>
+    <string name="long_press_abandon">长按 1.5S 放弃</string>
+    <string name="stats_link">统计</string>
+    <string name="settings_link">设置</string>
     <string name="pause">暂停</string>
     <string name="resume">继续</string>
     <string name="reset">重置</string>

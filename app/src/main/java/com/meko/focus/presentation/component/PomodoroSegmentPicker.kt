@@ -1,15 +1,18 @@
 package com.meko.focus.presentation.component
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.meko.focus.R
+import com.meko.focus.presentation.theme.usePomodoroTheme
 
 enum class PomodoroSegment {
     FOCUS, BREAK
@@ -30,30 +34,45 @@ fun PomodoroSegmentPicker(
     onSegmentSelected: (PomodoroSegment) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val themeState = usePomodoroTheme()
+    val isDark = themeState.isDarkTheme
+
+    val trackColor = if (isDark) Color(0xFF2A2A2A) else Color(0xFFE8E8E8)
+    val pillColor = if (isDark) Color(0xFF3A3A3A) else Color.White
+    val selectedText = if (isDark) Color.White else Color.Black
+    val unselectedText = if (isDark) Color(0xFF9E9E9E) else Color(0xFF757575)
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 32.dp)
+            .padding(horizontal = 28.dp)
             .height(48.dp)
             .clip(RoundedCornerShape(24.dp)),
-        // 使用主题提供的 surfaceVariant，增加视觉层次感
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        color = trackColor,
+        shadowElevation = 0.dp
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(4.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            SegmentItem(
+            SegmentSlot(
                 text = stringResource(R.string.focus),
-                isSelected = selectedSegment == PomodoroSegment.FOCUS,
+                selected = selectedSegment == PomodoroSegment.FOCUS,
                 onClick = { onSegmentSelected(PomodoroSegment.FOCUS) },
+                pillColor = pillColor,
+                selectedTextColor = selectedText,
+                unselectedTextColor = unselectedText,
                 modifier = Modifier.weight(1f)
             )
-
-            SegmentItem(
+            SegmentSlot(
                 text = stringResource(R.string.break_time),
-                isSelected = selectedSegment == PomodoroSegment.BREAK,
+                selected = selectedSegment == PomodoroSegment.BREAK,
                 onClick = { onSegmentSelected(PomodoroSegment.BREAK) },
+                pillColor = pillColor,
+                selectedTextColor = selectedText,
+                unselectedTextColor = unselectedText,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -61,35 +80,40 @@ fun PomodoroSegmentPicker(
 }
 
 @Composable
-private fun SegmentItem(
+private fun SegmentSlot(
     text: String,
-    isSelected: Boolean,
+    selected: Boolean,
     onClick: () -> Unit,
+    pillColor: Color,
+    selectedTextColor: Color,
+    unselectedTextColor: Color,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
         modifier = modifier
-            .fillMaxWidth()
-            .height(48.dp)
-            .clip(RoundedCornerShape(24.dp)),
-        // 选中时应用主色 (Primary)，未选中保持透明
-        color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
-        onClick = onClick
+            .fillMaxHeight()
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = text,
-                // 必须这样写，不能引用 FocusColor 或 ShortBreakColor
-                color = if (isSelected) {
-                    MaterialTheme.colorScheme.onPrimary
-                } else {
-                    MaterialTheme.colorScheme.onSurface
-                }
-            )
+        if (selected) {
+            Surface(
+                modifier = Modifier.matchParentSize(),
+                shape = RoundedCornerShape(20.dp),
+                color = pillColor,
+                shadowElevation = 2.dp
+            ) {}
         }
+        Text(
+            text = text,
+            fontSize = 16.sp,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+            color = if (selected) selectedTextColor else unselectedTextColor
+        )
     }
 }

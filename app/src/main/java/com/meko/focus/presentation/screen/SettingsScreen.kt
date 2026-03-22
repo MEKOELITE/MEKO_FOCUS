@@ -16,7 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Vibration
@@ -124,14 +123,6 @@ fun SettingsScreen(
                     onVibrationEnabledChange = { viewModel.updateVibrationEnabled(it) },
                     onAutoSwitchChange = { viewModel.updateAutoSwitch(it) },
                     isDarkTheme = isDarkTheme
-                )
-
-                // 主题设置
-                ThemeSettingsCard(
-                    darkTheme = uiState.draftSettings.darkTheme,
-                    onDarkThemeChange = { viewModel.updateDarkTheme(it) },
-                    isDarkTheme = isDarkTheme,
-                    onToggleTheme = themeState.toggleTheme
                 )
 
                 // 保存按钮
@@ -290,60 +281,6 @@ private fun NotificationSettingsCard(
                 onCheckedChange = onAutoSwitchChange,
                 isDarkTheme = isDarkTheme
             )
-        }
-    }
-}
-
-@Composable
-private fun ThemeSettingsCard(
-    darkTheme: Boolean,
-    onDarkThemeChange: (Boolean) -> Unit,
-    isDarkTheme: Boolean,
-    onToggleTheme: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDarkTheme) Color.DarkGray else Color.LightGray.copy(alpha = 0.2f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Palette,
-                    contentDescription = "主题",
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-                Text(
-                    text = "主题设置",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isDarkTheme) Color.White else Color.Black
-                )
-            }
-
-            SettingSwitch(
-                label = "深色主题",
-                checked = darkTheme,
-                onCheckedChange = onDarkThemeChange,
-                isDarkTheme = isDarkTheme
-            )
-
-            Button(
-                onClick = onToggleTheme,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("切换主题", fontSize = 16.sp)
-            }
         }
     }
 }

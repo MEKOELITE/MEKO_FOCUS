@@ -46,58 +46,66 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun updateFocusDuration(minutes: Int) {
+        val newDraftSettings = _uiState.value.draftSettings.copy(focusDurationMinutes = minutes)
         _uiState.value = _uiState.value.copy(
-            draftSettings = _uiState.value.draftSettings.copy(focusDurationMinutes = minutes),
-            hasChanges = _uiState.value.draftSettings.copy(focusDurationMinutes = minutes) != _uiState.value.currentSettings
+            draftSettings = newDraftSettings,
+            hasChanges = newDraftSettings != _uiState.value.currentSettings
         )
     }
 
     fun updateShortBreakDuration(minutes: Int) {
+        val newDraftSettings = _uiState.value.draftSettings.copy(shortBreakDurationMinutes = minutes)
         _uiState.value = _uiState.value.copy(
-            draftSettings = _uiState.value.draftSettings.copy(shortBreakDurationMinutes = minutes),
-            hasChanges = _uiState.value.draftSettings.copy(shortBreakDurationMinutes = minutes) != _uiState.value.currentSettings
+            draftSettings = newDraftSettings,
+            hasChanges = newDraftSettings != _uiState.value.currentSettings
         )
     }
 
     fun updateLongBreakDuration(minutes: Int) {
+        val newDraftSettings = _uiState.value.draftSettings.copy(longBreakDurationMinutes = minutes)
         _uiState.value = _uiState.value.copy(
-            draftSettings = _uiState.value.draftSettings.copy(longBreakDurationMinutes = minutes),
-            hasChanges = _uiState.value.draftSettings.copy(longBreakDurationMinutes = minutes) != _uiState.value.currentSettings
+            draftSettings = newDraftSettings,
+            hasChanges = newDraftSettings != _uiState.value.currentSettings
         )
     }
 
     fun updateAutoSwitch(enabled: Boolean) {
+        val newDraftSettings = _uiState.value.draftSettings.copy(autoSwitch = enabled)
         _uiState.value = _uiState.value.copy(
-            draftSettings = _uiState.value.draftSettings.copy(autoSwitch = enabled),
-            hasChanges = _uiState.value.draftSettings.copy(autoSwitch = enabled) != _uiState.value.currentSettings
+            draftSettings = newDraftSettings,
+            hasChanges = newDraftSettings != _uiState.value.currentSettings
         )
     }
 
     fun updateVibrationEnabled(enabled: Boolean) {
+        val newDraftSettings = _uiState.value.draftSettings.copy(vibrationEnabled = enabled)
         _uiState.value = _uiState.value.copy(
-            draftSettings = _uiState.value.draftSettings.copy(vibrationEnabled = enabled),
-            hasChanges = _uiState.value.draftSettings.copy(vibrationEnabled = enabled) != _uiState.value.currentSettings
+            draftSettings = newDraftSettings,
+            hasChanges = newDraftSettings != _uiState.value.currentSettings
         )
     }
 
     fun updateSoundEnabled(enabled: Boolean) {
+        val newDraftSettings = _uiState.value.draftSettings.copy(soundEnabled = enabled)
         _uiState.value = _uiState.value.copy(
-            draftSettings = _uiState.value.draftSettings.copy(soundEnabled = enabled),
-            hasChanges = _uiState.value.draftSettings.copy(soundEnabled = enabled) != _uiState.value.currentSettings
+            draftSettings = newDraftSettings,
+            hasChanges = newDraftSettings != _uiState.value.currentSettings
         )
     }
 
     fun updateNotificationsEnabled(enabled: Boolean) {
+        val newDraftSettings = _uiState.value.draftSettings.copy(notificationsEnabled = enabled)
         _uiState.value = _uiState.value.copy(
-            draftSettings = _uiState.value.draftSettings.copy(notificationsEnabled = enabled),
-            hasChanges = _uiState.value.draftSettings.copy(notificationsEnabled = enabled) != _uiState.value.currentSettings
+            draftSettings = newDraftSettings,
+            hasChanges = newDraftSettings != _uiState.value.currentSettings
         )
     }
 
     fun updateDarkTheme(enabled: Boolean) {
+        val newDraftSettings = _uiState.value.draftSettings.copy(darkTheme = enabled)
         _uiState.value = _uiState.value.copy(
-            draftSettings = _uiState.value.draftSettings.copy(darkTheme = enabled),
-            hasChanges = _uiState.value.draftSettings.copy(darkTheme = enabled) != _uiState.value.currentSettings
+            draftSettings = newDraftSettings,
+            hasChanges = newDraftSettings != _uiState.value.currentSettings
         )
     }
 

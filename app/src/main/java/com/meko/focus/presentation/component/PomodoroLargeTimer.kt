@@ -22,23 +22,15 @@ fun PomodoroLargeTimer(
     sessionType: SessionType,
     modifier: Modifier = Modifier
 ) {
-    val timeText = formatTime(remainingTimeMs)
+    // 防御性处理：确保时间非负
+    val safeTimeMs = remainingTimeMs.coerceAtLeast(0L)
+    val timeText = formatTime(safeTimeMs)
     val themeState = usePomodoroTheme()
     val isDarkTheme = themeState.isDarkTheme
 
     val textColor = when {
-        isDarkTheme -> {
-            // 夜间模式：所有文字都用荧光黄，确保在黑色背景上可见
-            FluorescentYellow
-        }
-        else -> {
-            // 日间模式：根据会话类型使用不同颜色
-            when (sessionType) {
-                SessionType.FOCUS -> Color.Black
-                SessionType.SHORT_BREAK -> Color(0xFF4CAF50) // 绿色
-                SessionType.LONG_BREAK -> Color(0xFF2196F3)  // 蓝色
-            }
-        }
+        isDarkTheme -> FluorescentYellow
+        else -> Color.Black
     }
 
     Box(
@@ -56,8 +48,16 @@ fun PomodoroLargeTimer(
     }
 }
 
+/**
+ * 格式化时间显示
+ *
+ * @param milliseconds 毫秒数
+ * @return 格式化的时间字符串 "MM:SS"
+ */
 private fun formatTime(milliseconds: Long): String {
-    val totalSeconds = milliseconds / 1000
+    // 确保输入非负
+    val safeMs = milliseconds.coerceAtLeast(0L)
+    val totalSeconds = safeMs / 1000
     val minutes = totalSeconds / 60
     val seconds = totalSeconds % 60
     return String.format("%02d:%02d", minutes, seconds)
