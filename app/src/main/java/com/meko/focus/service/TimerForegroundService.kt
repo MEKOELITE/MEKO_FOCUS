@@ -21,6 +21,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+/**
+ * 计时器前台服务
+ *
+ * 负责在后台持续运行计时器，确保即使应用进入后台或屏幕关闭时计时仍能正常进行。
+ * 使用 WakeLock 防止 CPU 进入休眠，并显示持续性通知展示当前状态。
+ */
 @AndroidEntryPoint
 class TimerForegroundService : Service() {
 
@@ -38,6 +44,12 @@ class TimerForegroundService : Service() {
     private var sessionType = "FOCUS"
     private var onTimerFinished: (() -> Unit)? = null
 
+    /**
+     * 服务绑定器
+     *
+     * 允许 Activity/ViewModel 绑定到此服务以获取服务实例的引用，
+     * 从而直接访问服务内部的 StateFlow。
+     */
     inner class TimerBinder : Binder() {
         fun getService(): TimerForegroundService = this@TimerForegroundService
     }
@@ -63,18 +75,27 @@ class TimerForegroundService : Service() {
         return START_STICKY
     }
 
+    /**
+     * 启动计时器
+     *
+     * @param timeMs 倒计时总时长（毫秒）
+     * @param type 会话类型（"FOCUS" 或其他）
+     */
     private fun startTimer(timeMs: Long, type: String) {
         sessionType = type
-        _remainingTimeMs.value = timeMs
+        
+        // 防御性检查：确保时间有效
+        val validTimeMs = if (timeMs <= 0) {
+            25 * 60 * 1000L // 默认25分钟
+        } else {
+            timeMs
+        }
+        
+        _remainingTimeMs.value = validTimeMs
         _isRunning.value = true
 
-        // 获取WakeLock保持CPU运行
         acquireWakeLock()
-
-        // 启动前台服务
         startForeground(NOTIFICATION_ID, createNotification())
-
-        // 开始倒计时
         startCountdown()
     }
 
@@ -83,14 +104,21 @@ class TimerForegroundService : Service() {
         timerJob = serviceScope.launch {
             while (_remainingTimeMs.value > 0 && _isRunning.value) {
                 delay(1000)
-                _remainingTimeMs.value -= 1000
-                updateNotification()
+                val currentTime = _remainingTimeMs.value
+                if (currentTime > 0) {
+                    _remainingTimeMs.value = currentTime - 1000
+                    updateNotification()
+                }
             }
 
-            if (_remainingTimeMs.value <= 0) {
+            // 使用局部变量避免竞态条件
+            val finalTime = _remainingTimeMs.value
+            val wasRunning = _isRunning.value
+            
+            if (finalTime <= 0 && wasRunning) {
+                _isRunning.value = false
                 onTimerFinished?.invoke()
                 sendCompletionNotification()
-                _isRunning.value = false
             }
         }
     }
@@ -116,6 +144,9 @@ class TimerForegroundService : Service() {
         stopSelf()
     }
 
+    /**
+     * 设置计时器完成回调
+     */
     fun setOnTimerFinishedListener(listener: () -> Unit) {
         onTimerFinished = listener
     }
@@ -127,7 +158,7 @@ class TimerForegroundService : Service() {
                 PowerManager.PARTIAL_WAKE_LOCK,
                 "MEKO_FOCUS:TimerWakeLock"
             ).apply {
-                acquire(60 * 60 * 1000L) // 最多1小时
+                acquire(60 * 60 * 1000L)
             }
         }
     }
@@ -142,16 +173,18 @@ class TimerForegroundService : Service() {
     }
 
     private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            "计时器",
-            NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = "番茄钟计时器通知"
-            setShowBadge(false)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "计时器",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "番茄钟计时器通知"
+                setShowBadge(false)
+            }
+            val manager = getSystemService(NotificationManager::class.java)
+            manager.createNotificationChannel(channel)
         }
-        val manager = getSystemService(NotificationManager::class.java)
-        manager.createNotificationChannel(channel)
     }
 
     private fun createNotification(): Notification {
@@ -249,6 +282,9 @@ class TimerForegroundService : Service() {
         const val EXTRA_TIME_MS = "extra_time_ms"
         const val EXTRA_SESSION_TYPE = "extra_session_type"
 
+        /**
+         * 启动计时器服务
+         */
         fun startTimer(context: Context, timeMs: Long, sessionType: String) {
             val intent = Intent(context, TimerForegroundService::class.java).apply {
                 action = ACTION_START

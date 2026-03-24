@@ -1,5 +1,6 @@
 package com.meko.focus.presentation.screen
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,25 +9,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Vibration
-import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -34,16 +32,22 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.meko.focus.domain.model.TimerSettings
 import com.meko.focus.presentation.theme.usePomodoroTheme
 import com.meko.focus.presentation.viewmodel.SettingsViewModel
 
@@ -57,6 +61,10 @@ fun SettingsScreen(
     val themeState = usePomodoroTheme()
     val isDarkTheme = themeState.isDarkTheme
 
+    BackHandler {
+        viewModel.persistAndRun(onNavigateBack)
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -68,7 +76,7 @@ fun SettingsScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = { viewModel.persistAndRun(onNavigateBack) }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "返回"
@@ -179,33 +187,30 @@ private fun TimerSettingsCard(
                 )
             }
 
-            DurationTextField(
+            DurationMinutesField(
                 label = "专注时长 (分钟)",
-                value = focusDuration.toString(),
-                onValueChange = { value ->
-                    val intValue = value.toIntOrNull() ?: 25
-                    if (intValue in 1..120) onFocusDurationChange(intValue)
-                },
+                minutes = focusDuration,
+                min = TimerSettings.MIN_FOCUS_DURATION,
+                max = TimerSettings.MAX_FOCUS_DURATION,
+                onMinutesCommitted = onFocusDurationChange,
                 isDarkTheme = isDarkTheme
             )
 
-            DurationTextField(
+            DurationMinutesField(
                 label = "短休时长 (分钟)",
-                value = shortBreakDuration.toString(),
-                onValueChange = { value ->
-                    val intValue = value.toIntOrNull() ?: 5
-                    if (intValue in 1..30) onShortBreakDurationChange(intValue)
-                },
+                minutes = shortBreakDuration,
+                min = TimerSettings.MIN_SHORT_BREAK,
+                max = TimerSettings.MAX_SHORT_BREAK,
+                onMinutesCommitted = onShortBreakDurationChange,
                 isDarkTheme = isDarkTheme
             )
 
-            DurationTextField(
+            DurationMinutesField(
                 label = "长休时长 (分钟)",
-                value = longBreakDuration.toString(),
-                onValueChange = { value ->
-                    val intValue = value.toIntOrNull() ?: 15
-                    if (intValue in 1..60) onLongBreakDurationChange(intValue)
-                },
+                minutes = longBreakDuration,
+                min = TimerSettings.MIN_LONG_BREAK,
+                max = TimerSettings.MAX_LONG_BREAK,
+                onMinutesCommitted = onLongBreakDurationChange,
                 isDarkTheme = isDarkTheme
             )
         }
@@ -287,21 +292,48 @@ private fun NotificationSettingsCard(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DurationTextField(
+private fun DurationMinutesField(
     label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
+    minutes: Int,
+    min: Int,
+    max: Int,
+    onMinutesCommitted: (Int) -> Unit,
     isDarkTheme: Boolean
 ) {
+    var text by remember { mutableStateOf(minutes.toString()) }
+    var isFocused by remember { mutableStateOf(false) }
+
+    LaunchedEffect(minutes) {
+        if (!isFocused) {
+            text = minutes.toString()
+        }
+    }
+
     OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
+        value = text,
+        onValueChange = { new ->
+            if (new.length <= 3 && new.all { it.isDigit() }) {
+                text = new
+            }
+        },
         label = { Text(label, color = if (isDarkTheme) Color.LightGray else Color.Gray) },
-        modifier = Modifier.fillMaxWidth(),
-        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Number),
+        modifier = Modifier
+            .fillMaxWidth()
+            .onFocusChanged { focusState ->
+                if (isFocused && !focusState.isFocused) {
+                    val parsed = text.toIntOrNull()
+                    val committed = if (parsed == null || parsed <= 0) {
+                        minutes
+                    } else {
+                        parsed.coerceIn(min, max)
+                    }
+                    text = committed.toString()
+                    onMinutesCommitted(committed)
+                }
+                isFocused = focusState.isFocused
+            },
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         singleLine = true,
-        // 这里是修改的核心：将 outlinedTextFieldColors 改为 colors
-        // 并且参数名也从 textColor 变更为 focusedTextColor 等
         colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
             focusedTextColor = if (isDarkTheme) Color.White else Color.Black,
             unfocusedTextColor = if (isDarkTheme) Color.White else Color.Black,

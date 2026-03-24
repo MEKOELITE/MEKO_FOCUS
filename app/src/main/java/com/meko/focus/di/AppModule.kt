@@ -17,10 +17,18 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+/**
+ * Hilt 依赖注入模块
+ *
+ * 提供应用级别的单例依赖，确保整个应用共享同一实例。
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
+    /**
+     * 提供设置数据存储实例
+     */
     @Provides
     @Singleton
     fun provideSettingsDataStore(
@@ -29,6 +37,9 @@ object AppModule {
         return SettingsDataStore(context)
     }
 
+    /**
+     * 提供设置 Repository
+     */
     @Provides
     @Singleton
     fun provideSettingsRepository(
@@ -37,12 +48,20 @@ object AppModule {
         return SettingsRepositoryImpl(settingsDataStore)
     }
 
+    /**
+     * 提供名言 Repository
+     */
     @Provides
     @Singleton
     fun provideQuoteRepository(): QuoteRepository {
         return QuoteRepositoryImpl()
     }
 
+    /**
+     * 提供数据库实例
+     *
+     * 使用单例模式确保整个应用只有一个数据库实例。
+     */
     @Provides
     @Singleton
     fun provideFocusDatabase(
@@ -51,6 +70,9 @@ object AppModule {
         return FocusDatabase.getInstance(context)
     }
 
+    /**
+     * 提供专注会话 DAO
+     */
     @Provides
     @Singleton
     fun provideFocusSessionDao(
@@ -59,6 +81,9 @@ object AppModule {
         return database.focusSessionDao()
     }
 
+    /**
+     * 提供专注会话 Repository
+     */
     @Provides
     @Singleton
     fun provideFocusSessionRepository(
